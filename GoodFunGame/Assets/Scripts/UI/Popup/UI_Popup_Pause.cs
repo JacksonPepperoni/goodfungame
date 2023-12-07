@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class UI_Popup_Pause : UI_Popup
 {
@@ -9,9 +10,7 @@ public class UI_Popup_Pause : UI_Popup
     #region Enums
     enum Texts
     {
-        BackToMainText,
-        OptionsText,
-        ContinueText,
+     
     }
 
     enum Buttons
@@ -25,11 +24,13 @@ public class UI_Popup_Pause : UI_Popup
     void Start()
     {
         Init();
+        //Time.timeScale = 0f;
+
     }
 
-    public override void Init()
+    public override bool Init()
     {
-        base.Init();
+        if (!base.Init()) return false;
 
         BindButton(typeof(Buttons));
         BindText(typeof(Texts));
@@ -38,21 +39,26 @@ public class UI_Popup_Pause : UI_Popup
         GetButton((int)Buttons.OptionsBtn).gameObject.BindEvent(Options);
         GetButton((int)Buttons.ContinueBtn).gameObject.BindEvent(Continue);
 
-
+        return true;
     }
 
     public void BackToMain(PointerEventData data)
     {
-        Debug.Log("메인으로");
+        AudioController.Instance.SFXPlay(SFX.Button);
+        Main.UI.ClosePopupUI(this);
+        Main.Scene.LoadScene("TitleScene");
     }
     public void Options(PointerEventData data)
     {
-        Debug.Log("옵션");
-       
+        AudioController.Instance.SFXPlay(SFX.Button);
+        Main.UI.ShowPopupUI<UI_Popup_Option>();
+
     }
     public void Continue(PointerEventData data)
     {
+        AudioController.Instance.SFXPlay(SFX.Button);
         Main.UI.ClosePopupUI(this);
-        Debug.Log("게임계속하기");
+        //Time.timeScale = 1f;
+
     }
 }

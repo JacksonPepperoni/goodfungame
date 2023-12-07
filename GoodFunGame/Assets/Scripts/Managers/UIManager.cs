@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager
 {
@@ -32,8 +34,11 @@ public class UIManager
 
         go.transform.SetParent(Root.transform);
 
+        RefreshTimeScale();
+
         return popup;
     }
+
 
     public void ClosePopupUI(UI_Popup popup) // 안전 차원
     {
@@ -57,7 +62,8 @@ public class UIManager
         UI_Popup popup = _popupStack.Pop();
         Main.Resource.Destroy(popup.gameObject);
         popup = null;
-        _order--; // order 줄이기
+        _order--;
+        RefreshTimeScale();
     }
 
     public void CloseAllPopupUI()
@@ -93,8 +99,18 @@ public class UIManager
         _sceneUI = sceneUI;
 
         go.transform.SetParent(Root.transform);
-
         return sceneUI;
+    }
+
+    public void RefreshTimeScale()
+    {
+        if (Main.Scene.CurrentScene is not GameScene)
+        {
+            Time.timeScale = 1;
+            return;
+        }
+        if (_popupStack.Count > 0) Time.timeScale = 0;
+        else Time.timeScale = 1;
     }
 
 

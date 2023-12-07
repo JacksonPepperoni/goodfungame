@@ -6,7 +6,6 @@ public class Projectile : Thing
 {
 
     #region Properties
-
     public Creature Owner { get; protected set; }
 
     public float Damage { get; private set; }
@@ -18,6 +17,7 @@ public class Projectile : Thing
     #region Fields
 
     // Components.
+    protected SpriteRenderer _spriter;
     protected Rigidbody2D _rigidbody;
 
     #endregion
@@ -29,6 +29,16 @@ public class Projectile : Thing
         StopAllCoroutines();
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag($"Wall"))
+        {
+            if (this.IsValid()) Main.Object.Despawn(this);
+        }
+    }
+
+
+
     #endregion
 
     #region Initialize / Set
@@ -37,15 +47,17 @@ public class Projectile : Thing
     {
         base.Initialize();
 
+        _spriter = this.GetComponent<SpriteRenderer>();
         _rigidbody = this.GetComponent<Rigidbody2D>();
 
         return true;
     }
 
-    public virtual Projectile SetInfo(Creature owner, float damage = -1, float scale = 1, float duration = 8)
+    public virtual Projectile SetInfo(Creature owner, string key, float damage = -1, float scale = 1, float duration = 8)
     {
         Initialize();
         this.Owner = owner;
+        this._spriter.sprite = Main.Resource.Load<Sprite>($"{key}.sprite");
         this.Damage = damage == -1 ? owner.Damage : damage;
         this.transform.localScale = Vector3.one * scale;
         this.Duration = duration;
@@ -65,10 +77,7 @@ public class Projectile : Thing
     private IEnumerator CoCheckDestroy()
     {
         yield return new WaitForSeconds(Duration);
-        // Projectile 제거 임시.
-        // TODO:: ObjectManager의 Despawn 기능을 통해 제거하게끔!
-        Main.Resource.Destroy(this.gameObject);
-        //Main.Object.Despawn(this);
+        Main.Object.Despawn(this);
     }
 
 }

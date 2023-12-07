@@ -8,26 +8,12 @@ public class UI_Popup_Option : UI_Popup
 {
 
     #region Enums
-    enum Texts
-    {
-        All_NameText,
-        All_PercentText,
-        BGM_NameText,
-        BGM_PercentText,
-        SFX_NameText,
-        SFX_PercentText,
-    }
 
     enum GameObjects
     {
-        All_Slider,
-        All_MuteToggle,
-        BGM_Slider,
-        BGM_MuteToggle,
-        SFX_Slider,
-        SFX_MuteToggle
-
-
+      MASTER,
+      BGM,
+      SFX
     }
 
     enum Buttons
@@ -35,29 +21,34 @@ public class UI_Popup_Option : UI_Popup
         BackspaceBtn
     }
 
-
-
     #endregion
+
+
     void Start()
     {
         Init();
     }
 
-    public override void Init()
+    public override bool Init()
     {
-        base.Init();
+        if (!base.Init()) return false;
 
         BindObject(typeof(GameObjects));
-        BindText(typeof(Texts));
         BindButton(typeof(Buttons));
+
+        GetObject((int)GameObjects.MASTER).GetComponent<Option_Audio>().Type = Option_Audio.Types.Master;
+        GetObject((int)GameObjects.BGM).GetComponent<Option_Audio>().Type = Option_Audio.Types.BGM;
+        GetObject((int)GameObjects.SFX).GetComponent<Option_Audio>().Type = Option_Audio.Types.SFX;
+
 
         GetButton((int)Buttons.BackspaceBtn).gameObject.BindEvent(Close);
 
+        return true;
     }
 
     void Close(PointerEventData data)
     {
+        AudioController.Instance.SFXPlay(SFX.Button);
         Main.UI.ClosePopupUI(this);
-        Debug.Log("옵션창꺼집니다");
     }
 }

@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class UI_SkillCard : UI_Base
 {
@@ -10,16 +10,16 @@ public class UI_SkillCard : UI_Base
     enum Texts
     {
         Name,
-        Explanation,
+        Introduce,
         Price,
         BuyText,
-
     }
     enum Images
     {
-        Panel,
         IconBackground,
         IconImage,
+        BuyBtn,
+
     }
     enum Buttons
     {
@@ -27,39 +27,67 @@ public class UI_SkillCard : UI_Base
     }
 
     #endregion
+
+    #region Properties
+
+    public SkillData Data { get; private set; }
+
+    #endregion
     void Start()
     {
         Init();
     }
 
-    public override void Init()
+    public override bool Init()
     {
+        if (!base.Init()) return false;
+
         BindButton(typeof(Buttons));
         BindText(typeof(Texts));
         BindImage(typeof(Images));
 
 
-        GetButton((int)Buttons.BuyBtn).gameObject.BindEvent(Buy);
-
-        GetText((int)Texts.Name).text = "스킬이름";
-        GetText((int)Texts.Explanation).text = "강력한 스킬설명이다";
-        GetText((int)Texts.Price).text = "1000원";
-
-        GetText((int)Texts.BuyText).text = "구매";
-
-
+        GetButton((int)Buttons.BuyBtn).gameObject.SetActive(true);
+        GetButton((int)Buttons.BuyBtn).gameObject.BindEvent(PurchasePopup);
+        Main.Game.OnResourcesChanged -= Refresh;
+        Main.Game.OnResourcesChanged += Refresh;
+        Refresh();
+        return true;
     }
 
-    void Buy(PointerEventData data)
+    public void SetInfo(string key)
     {
-        Debug.Log("구매버튼 눌렀습니다");
-        Main.UI.ShowPopupUI<UI_Popup_Purchase>();
-
-
+        Data = Main.Data.Skills[key];
+        Refresh();
     }
 
-    // 구매버튼 누르면 구매 확인창뜨고 ok 눌러야 구매됨
-    // 현재 재산으로 못사는 스킬을 구매버튼 비활성화
+    public void Refresh()
+    {
+        if (Data == null) return;
+        Init();
+        GetText((int)Texts.Name).text = Data.skillStringKey;
+        GetText((int)Texts.Introduce).text = Data.skillDesc;
+        GetText((int)Texts.Price).text = $"{Data.skillPrice} Gold";
+        GetImage((int)Images.IconImage).sprite = Main.Resource.Load<Sprite>($"{Data.skillStringKey}.sprite");
 
+
+        if ((GetButton((int)Buttons.BuyBtn) != null) && Main.Game.PurchasedSkills.Contains(Data.skillStringKey))
+        {
+            GetButton((int)Buttons.BuyBtn).gameObject.SetActive(false);
+            GetText((int)Texts.Price).text = "";
+        }
+
+        GetText((int)Texts.BuyText).text = Data.skillPrice > Main.Game.Gold ? "소지금 부족" : "구매하기";
+
+        GetButton((int)Buttons.BuyBtn).interactable = Data.skillPrice <= Main.Game.Gold; // 바인딩클릭막는건 이걸론 안된다
+        GetImage((int)Images.BuyBtn).raycastTarget = Data.skillPrice <= Main.Game.Gold; // 레이캐스트 끄니까 가능
+
+    }
+    void PurchasePopup(PointerEventData data)
+    {
+        AudioController.Instance.SFXPlay(SFX.Button);
+        Main.UI.ShowPopupUI<UI_Popup_Purchase>().SetInfo(this);
+    }
 
 }
+
